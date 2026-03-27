@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @layer base {
+  /* ── Dark Theme (default) ── */
   :root {
     --bg: #0f1117;
     --surface: #181c27;
@@ -24,9 +25,32 @@
     --mkt:      #784212; --mkt-cl: #321608; --mkt-tag: #e67e22;
   }
 
+  /* ── Light Theme ── */
+  [data-theme="light"] {
+    --bg: #f0f2f5;
+    --surface: #ffffff;
+    --surface2: #f7f8fa;
+    --border: #dfe3eb;
+    --text: #1a1d2e;
+    --text-dim: #5c6280;
+    --text-muted: #9ca0b8;
+    --accent: #3b7de8;
+
+    --ti-cl: #dbeafe; --ti-tag: #1d6fa5;
+    --rh-cl: #dcfce7; --rh-tag: #15803d;
+    --fin-cl: #fef9c3; --fin-tag: #a16207;
+    --dir-cl: #fee2e2; --dir-tag: #b91c1c;
+    --com-cl: #f3e8ff; --com-tag: #7e22ce;
+    --ope-cl: #dbeafe; --ope-tag: #1e6091;
+    --aud-cl: #fef3c7; --aud-tag: #92400e;
+    --dp-cl:  #e0f2fe; --dp-tag: #0e4f82;
+    --mkt-cl: #ffedd5; --mkt-tag: #c2410c;
+  }
+
   body {
     @apply font-sans bg-bg text-text min-h-screen antialiased;
     font-family: 'DM Sans', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 

@@ -1,5 +1,6 @@
 import { useInventory } from '../../context/InventoryContext';
 import { Button } from '../atoms/Button';
+import { ThemeToggle } from '../atoms/ThemeToggle';
 
 export function Header({ onAddClick }) {
   const { lastSaved, exportCSV } = useInventory();
@@ -15,7 +16,9 @@ export function Header({ onAddClick }) {
           <span className="text-xs text-text-dim mt-0.5 block">{lastSaved}</span>
         </div>
       </div>
-      <div className="flex gap-2.5">
+      <div className="flex items-center gap-3">
+        <ThemeToggle />
+        <div className="w-px h-6 bg-border" />
         <Button variant="ghost" onClick={exportCSV}>⬇ Exportar CSV</Button>
         <Button variant="primary" onClick={onAddClick}>＋ Adicionar Notebook</Button>
       </div>
