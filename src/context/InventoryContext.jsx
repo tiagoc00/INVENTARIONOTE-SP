@@ -56,6 +56,36 @@ export function InventoryProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
+  // Migração automática do LocalStorage antigo para o Firebase
+  useEffect(() => {
+    const migrateData = async () => {
+      try {
+        const localData = localStorage.getItem("inventario_nb");
+        if (localData) {
+          const parsedData = JSON.parse(localData);
+          if (Array.isArray(parsedData) && parsedData.length > 0) {
+            console.log(`Migrando ${parsedData.length} notebooks antigos para o Firebase...`);
+            
+            for (const notebook of parsedData) {
+              const { id, ...notebookData } = notebook;
+              await addDoc(collection(db, "notebooks"), {
+                ...notebookData,
+                createdAt: new Date().toISOString()
+              });
+            }
+            // Remove o cache antigo após a migração para não duplicar no futuro
+            localStorage.removeItem("inventario_nb");
+            console.log("Migração concluída com sucesso!");
+          }
+        }
+      } catch (err) {
+        console.error("Erro durante a migração do LocalStorage:", err);
+      }
+    };
+
+    migrateData();
+  }, []);
+
   const addNotebook = async (notebook) => {
     try {
       await addDoc(collection(db, "notebooks"), {
