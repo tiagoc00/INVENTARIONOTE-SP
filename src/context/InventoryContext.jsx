@@ -38,23 +38,48 @@ export function InventoryProvider({ children }) {
   // Real-time synchronization with Firestore
   useEffect(() => {
     setIsLoading(true);
-    const q = query(collection(db, "notebooks"), orderBy("createdAt", "desc"));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items = snapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id
-      }));
-      setData(items);
-      setIsLoading(false);
-      setLastSaved(`Atualizado: ${new Date().toLocaleTimeString('pt-BR')}`);
-    }, (error) => {
-      console.error("Erro ao ler do Firebase:", error);
-      setIsLoading(false);
-      setLastSaved("Erro na conexão com Banco de Dados");
-    });
 
-    return () => unsubscribe();
+    const startListener = (q, isRetry = false) => {
+      return onSnapshot(q, (snapshot) => {
+        const items = snapshot.docs.map(d => ({
+          ...d.data(),
+          id: d.id
+        }));
+        // Ordena localmente se a query não tem orderBy (fallback)
+        if (isRetry) {
+          items.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        }
+        setData(items);
+        setIsLoading(false);
+        setLastSaved(`Atualizado: ${new Date().toLocaleTimeString('pt-BR')}`);
+      }, (error) => {
+        console.error("Erro no Firestore:", error.code, error.message);
+
+        // Se a consulta ordenada falhar, tenta sem o orderBy
+        if (!isRetry) {
+          console.warn("Tentando consulta sem orderBy...");
+          startListener(collection(db, "notebooks"), true);
+          return;
+        }
+
+        // Se ambas falharam, mostra mensagem de acordo com o erro
+        setIsLoading(false);
+        if (error.code === 'permission-denied') {
+          setLastSaved("⚠ Sem permissão — verifique as regras do Firestore");
+        } else if (error.code === 'unavailable') {
+          setLastSaved("⚠ Sem conexão com a internet");
+        } else {
+          setLastSaved(`Erro: ${error.code || error.message}`);
+        }
+      });
+    };
+
+    const orderedQuery = query(collection(db, "notebooks"), orderBy("createdAt", "desc"));
+    const unsubscribe = startListener(orderedQuery);
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, []);
 
   // Migração automática do LocalStorage antigo para o Firebase

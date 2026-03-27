@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { 
+  getFirestore,
   initializeFirestore, 
   persistentLocalCache, 
   persistentMultipleTabManager 
@@ -16,8 +17,17 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 
-// Inicializa o Firestore com cache local (persistência de dados offline) ativado
-// Isso resolve a lentidão, exibindo os dados instantaneamente enquanto sincroniza em segundo plano
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-});
+// Tenta inicializar com cache local para performance,
+// se falhar (ex: navegador sem suporte a IndexedDB), usa o modo padrão
+let firestoreDb;
+try {
+  firestoreDb = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  });
+  console.log("Firestore inicializado com cache persistente.");
+} catch (error) {
+  console.warn("Cache persistente indisponível, usando modo padrão:", error.message);
+  firestoreDb = getFirestore(app);
+}
+
+export const db = firestoreDb;
