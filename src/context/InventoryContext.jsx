@@ -7,7 +7,8 @@ import {
   deleteDoc, 
   doc, 
   query, 
-  orderBy 
+  orderBy,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
@@ -123,6 +124,25 @@ export function InventoryProvider({ children }) {
     }
   };
 
+  const addMultipleNotebooks = async (notebooksList) => {
+    try {
+      const batch = writeBatch(db);
+      notebooksList.forEach(notebook => {
+        const docRef = doc(collection(db, "notebooks"));
+        batch.set(docRef, {
+          ...notebook,
+          createdAt: new Date().toISOString()
+        });
+      });
+      await batch.commit();
+      return true;
+    } catch (error) {
+      console.error("Erro ao importar em lote:", error);
+      alert("Erro ao salvar no banco de dados.");
+      return false;
+    }
+  };
+
   const getFilteredData = () => {
     let rows = currentSector === "todos" ? data : data.filter(d => d.setor === currentSector);
     if (searchQuery) {
@@ -156,7 +176,7 @@ export function InventoryProvider({ children }) {
     <InventoryContext.Provider value={{
       data, currentSector, setCurrentSector, searchQuery, setSearchQuery,
       lastSaved, isLoading, addNotebook, updateNotebook, cycleStatus, deleteNotebook,
-      getFilteredData, getSummary, exportCSV, SETORES_CONFIG
+      addMultipleNotebooks, getFilteredData, getSummary, exportCSV, SETORES_CONFIG
     }}>
       {children}
     </InventoryContext.Provider>
