@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventário de Notebooks</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2336;
+    --border: #2a2f45;
+    --text: #e8eaf2;
+    --text-dim: #7a80a0;
+    --text-muted: #4a5070;
+    --accent: #4f8ef7;
+
+    --ti:       #2471A3; --ti-cl: #1a3a5c; --ti-tag: #4a9fd4;
+    --rh:       #1E8449; --rh-cl: #0f3d22; --rh-tag: #2ecc71;
+    --fin:      #B7950B; --fin-cl: #4a3a04; --fin-tag: #f0c030;
+    --dir:      #922B21; --dir-cl: #3d1008; --dir-tag: #e74c3c;
+    --com:      #6C3483; --com-cl: #2d1238; --com-tag: #9b59b6;
+    --ope:      #1A5276; --ope-cl: #0a2030; --ope-tag: #3498db;
+    --aud:      #7D6608; --aud-cl: #352a02; --aud-tag: #d4ac0d;
+    --dp:       #154360; --dp-cl: #091c2b; --dp-tag: #2980b9;
+    --mkt:      #784212; --mkt-cl: #321608; --mkt-tag: #e67e22;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  header h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.3px; }
+  header span { font-size: 12px; color: var(--text-dim); margin-top: 2px; display: block; }
+  .header-actions { display: flex; gap: 10px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px; border-radius: 8px;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; transition: all .15s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #3a7be0; }
+  .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-danger { background: transparent; color: #e74c3c; border: 1px solid #c0392b44; }
+  .btn-danger:hover { background: #c0392b22; }
+  .btn-sm { padding: 5px 11px; font-size: 12px; }
+  .btn-success { background: #1e8449; color: #fff; }
+  .btn-success:hover { background: #166a39; }
+
+  /* ── LAYOUT ── */
+  .layout { display: flex; height: calc(100vh - 64px); }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px; min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+  .sidebar-section { padding: 16px 12px 8px; }
+  .sidebar-label { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; padding: 0 8px 8px; }
+
+  .sector-btn {
+    width: 100%; display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px; border: none;
+    background: transparent; color: var(--text-dim);
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all .15s; text-align: left;
+    position: relative;
+  }
+  .sector-btn:hover { background: var(--surface2); color: var(--text); }
+  .sector-btn.active { color: var(--text); background: var(--surface2); }
+  .sector-btn.active::before {
+    content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
+    width: 3px; border-radius: 2px;
+    background: var(--sector-color, var(--accent));
+  }
+  .sector-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--sector-color, #555); flex-shrink: 0;
+  }
+  .sector-count {
+    margin-left: auto;
+    background: var(--surface); border-radius: 20px;
+    padding: 1px 7px; font-size: 11px; color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .sector-btn.active .sector-count { background: var(--bg); }
+
+  .sidebar-summary {
+    margin: 12px; padding: 12px; border-radius: 10px;
+    background: var(--bg); border: 1px solid var(--border);
+  }
+  .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .summary-row:last-child { margin-bottom: 0; }
+  .summary-label { font-size: 11px; color: var(--text-dim); }
+  .summary-val { font-size: 13px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .summary-val.green { color: #2ecc71; }
+  .summary-val.red { color: #e74c3c; }
+  .summary-val.yellow { color: #f0c030; }
+
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .toolbar {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface);
+  }
+  .toolbar-title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .sector-badge {
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    background: var(--sector-color-cl, #222);
+    color: var(--sector-color-tag, #aaa);
+    border: 1px solid var(--sector-color-tag, #555)44;
+  }
+  .search-box {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 12px;
+    color: var(--text-dim); font-size: 13px;
+  }
+  .search-box input {
+    background: none; border: none; outline: none;
+    color: var(--text); font-family: inherit; font-size: 13px; width: 200px;
+  }
+  .search-box input::placeholder { color: var(--text-muted); }
+
+  /* ── TABLE ── */
+  .table-wrap { flex: 1; overflow: auto; padding: 20px 24px; }
+
+  table {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    font-size: 13px;
+  }
+  thead th {
+    background: var(--surface2);
+    color: var(--text-dim); font-weight: 600; font-size: 11px;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    padding: 10px 14px; text-align: left;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 2;
+    white-space: nowrap;
+  }
+  thead th:first-child { border-radius: 8px 0 0 0; }
+  thead th:last-child { border-radius: 0 8px 0 0; }
+
+  tbody tr {
+    transition: background .1s;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.editing { background: #1a2040; outline: 1px solid var(--accent); outline-offset: -1px; }
+
+  tbody td {
+    padding: 11px 14px; color: var(--text);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  /* inline edit */
+  .editable {
+    background: none; border: none; outline: none;
+    color: var(--text); font-family: inherit; font-size: 13px;
+    width: 100%; padding: 0;
+  }
+  tbody tr:not(.editing) .editable { pointer-events: none; }
+  tbody tr.editing .editable {
+    background: var(--bg); border: 1px solid var(--accent);
+    border-radius: 5px; padding: 4px 7px;
+  }
+
+  /* status pill */
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    cursor: pointer; border: none; font-family: inherit;
+    white-space: nowrap;
+  }
+  .status-Ativo { background: #0f3d22; color: #2ecc71; }
+  .status-Inativo { background: #3d0f0f; color: #e74c3c; }
+  .status-Manutenção { background: #3d2e0a; color: #f0c030; }
+
+  .actions-cell { display: flex; gap: 6px; white-space: nowrap; }
+
+  /* ── ADD ROW FORM ── */
+  .add-form {
+    margin: 0 24px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: none;
+  }
+  .add-form.open { display: block; }
+  .add-form h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: var(--text-dim); }
+  .form-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+    margin-bottom: 16px;
+  }
+  .form-field label { font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 5px; letter-spacing: 0.3px; }
+  .form-field input, .form-field select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 7px; padding: 8px 10px;
+    color: var(--text); font-family: inherit; font-size: 13px;
+    outline: none; transition: border-color .15s;
+  }
+  .form-field input:focus, .form-field select:focus { border-color: var(--accent); }
+  .form-field select option { background: var(--surface2); }
+  .form-actions { display: flex; gap: 10px; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--text-muted);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 18px;
+    font-size: 13px; color: var(--text);
+    box-shadow: 0 8px 32px #00000055;
+    transform: translateY(20px); opacity: 0;
+    transition: all .25s; pointer-events: none; z-index: 999;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-icon">💻</div>
+    <div>
+      <h1>Inventário de Notebooks</h1>
+      <span id="last-saved">Dados salvos localmente</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="exportCSV()">⬇ Exportar CSV</button>
+    <button class="btn btn-primary" onclick="toggleAddForm()">＋ Adicionar Notebook</button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Setores</div>
+      <button class="sector-btn active" data-sector="todos" style="--sector-color:#4f8ef7" onclick="selectSector('todos',this)">
+        <div class="sector-dot" style="background:#4f8ef7"></div>
+        Todos os Setores
+        <span class="sector-count" id="count-todos">0</span>
+      </button>
+    </div>
+    <div class="sidebar-section" id="sector-list"></div>
+
+    <div class="sidebar-summary">
+      <div class="summary-row"><span class="summary-label">Total</span><span class="summary-val" id="s-total">0</span></div>
+      <div class="summary-row"><span class="summary-label">Ativos</span><span class="summary-val green" id="s-ativos">0</span></div>
+      <div class="summary-row"><span class="summary-label">Inativos</span><span class="summary-val red" id="s-inativos">0</span></div>
+      <div class="summary-row"><span class="summary-label">Manutenção</span><span class="summary-val yellow" id="s-manut">0</span></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="toolbar">
+      <div class="toolbar-title">
+        <span id="toolbar-title">Todos os Setores</span>
+        <span class="sector-badge" id="toolbar-badge" style="display:none"></span>
+      </div>
+      <div class="search-box">
+        🔍
+        <input type="text" id="search-input" placeholder="Buscar usuário, computador..." oninput="renderTable()">
+      </div>
+    </div>
+
+    <!-- ADD FORM -->
+    <div class="add-form" id="add-form">
+      <h3>➕ Novo Notebook</h3>
+      <div class="form-grid">
+        <div class="form-field">
+          <label>SETOR</label>
+          <select id="f-setor">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="form-field"><label>NOME DO USUÁRIO</label><input id="f-usuario" placeholder="Ex: João Silva"></div>
+        <div class="form-field"><label>NOME DO COMPUTADOR</label><input id="f-nb" placeholder="Ex: NB-TI-001"></div>
+        <div class="form-field"><label>MARCA / MODELO</label><input id="f-marca" placeholder="Ex: Dell Latitude 5420"></div>
+        <div class="form-field"><label>PROCESSADOR</label><input id="f-cpu" placeholder="Ex: Intel i5-1135G7"></div>
+        <div class="form-field"><label>MEMÓRIA RAM</label><input id="f-ram" placeholder="Ex: 16 GB DDR4"></div>
+        <div class="form-field"><label>ARMAZENAMENTO</label><input id="f-hd" placeholder="Ex: 512 GB SSD"></div>
+        <div class="form-field"><label>Nº DE SÉRIE</label><input id="f-serie" placeholder="Ex: SN123456789"></div>
+        <div class="form-field"><label>Nº PATRIMÔNIO</label><input id="f-patri" placeholder="Ex: PAT-00123"></div>
+        <div class="form-field">
+          <label>STATUS</label>
+          <select id="f-status">
+            <option>Ativo</option>
+            <option>Inativo</option>
+            <option>Manutenção</option>
+          </select>
+        </div>
+        <div class="form-field"><label>OBSERVAÇÕES</label><input id="f-obs" placeholder="Observações gerais..."></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-success" onclick="addNotebook()">✓ Salvar</button>
+        <button class="btn btn-ghost" onclick="toggleAddForm()">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table id="main-table">
+        <thead>
+          <tr>
+            <th>Setor</th>
+            <th>Usuário</th>
+            <th>Computador</th>
+            <th>Marca / Modelo</th>
+            <th>Processador</th>
+            <th>RAM</th>
+            <th>Armazenamento</th>
+            <th>Nº Série</th>
+            <th>Patrimônio</th>
+            <th>Status</th>
+            <th>Observações</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state" style="display:none">
+        <div class="icon">📭</div>
+        <p>Nenhum notebook encontrado. Adicione o primeiro!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SETORES_CONFIG = {
+  "TI":                   { cor: "#2471A3", cl: "#1a3a5c", tag: "#4a9fd4" },
+  "RH":                   { cor: "#1E8449", cl: "#0f3d22", tag: "#2ecc71" },
+  "Financeiro":           { cor: "#B7950B", cl: "#4a3a04", tag: "#f0c030" },
+  "Diretoria":            { cor: "#922B21", cl: "#3d1008", tag: "#e74c3c" },
+  "Comercial/Vendas":     { cor: "#6C3483", cl: "#2d1238", tag: "#9b59b6" },
+  "Operações":            { cor: "#1A5276", cl: "#0a2030", tag: "#3498db" },
+  "Auditoria":            { cor: "#7D6608", cl: "#352a02", tag: "#d4ac0d" },
+  "Departamento Pessoal": { cor: "#154360", cl: "#091c2b", tag: "#2980b9" },
+  "Marketing":            { cor: "#784212", cl: "#321608", tag: "#e67e22" },
+};
+
+const STATUS_CYCLE = ["Ativo", "Inativo", "Manutenção"];
+
+let data = [];
+let currentSector = "todos";
+let editingId = null;
+
+// ── STORAGE ──
+function save() {
+  localStorage.setItem("inventario_nb", JSON.stringify(data));
+  const now = new Date();
+  document.getElementById("last-saved").textContent =
+    `Salvo às ${now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}`;
+}
+
+function load() {
+  const raw = localStorage.getItem("inventario_nb");
+  if (raw) data = JSON.parse(raw);
+}
+
+// ── SIDEBAR ──
+function buildSidebar() {
+  const list = document.getElementById("sector-list");
+  const sel = document.getElementById("f-setor");
+  list.innerHTML = "";
+  sel.innerHTML = '<option value="">Selecione...</option>';
+
+  for (const [setor, cfg] of Object.entries(SETORES_CONFIG)) {
+    const count = data.filter(d => d.setor === setor).length;
+
+    const btn = document.createElement("button");
+    btn.className = "sector-btn" + (currentSector === setor ? " active" : "");
+    btn.dataset.sector = setor;
+    btn.style.setProperty("--sector-color", cfg.cor);
+    btn.onclick = () => selectSector(setor, btn);
+    btn.innerHTML = `
+      <div class="sector-dot" style="background:${cfg.cor}"></div>
+      ${setor}
+      <span class="sector-count" id="count-${setor.replace(/\//g,'-')}">${count}</span>`;
+    list.appendChild(btn);
+
+    const opt = document.createElement("option");
+    opt.value = setor; opt.textContent = setor;
+    sel.appendChild(opt);
+  }
+
+  document.getElementById("count-todos").textContent = data.length;
+  updateSummary();
+}
+
+function updateSummary() {
+  const filtered = currentSector === "todos" ? data : data.filter(d => d.setor === currentSector);
+  document.getElementById("s-total").textContent = filtered.length;
+  document.getElementById("s-ativos").textContent = filtered.filter(d => d.status === "Ativo").length;
+  document.getElementById("s-inativos").textContent = filtered.filter(d => d.status === "Inativo").length;
+  document.getElementById("s-manut").textContent = filtered.filter(d => d.status === "Manutenção").length;
+}
+
+function selectSector(setor, btn) {
+  currentSector = setor;
+  document.querySelectorAll(".sector-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+
+  const title = document.getElementById("toolbar-title");
+  const badge = document.getElementById("toolbar-badge");
+  if (setor === "todos") {
+    title.textContent = "Todos os Setores";
+    badge.style.display = "none";
+  } else {
+    title.textContent = setor;
+    const cfg = SETORES_CONFIG[setor];
+    badge.style.display = "inline-flex";
+    badge.style.background = cfg.cl;
+    badge.style.color = cfg.tag;
+    badge.style.borderColor = cfg.tag + "44";
+    badge.textContent = data.filter(d => d.setor === setor).length + " notebooks";
+  }
+  renderTable();
+  updateSummary();
+}
+
+// ── TABLE ──
+function renderTable() {
+  const q = document.getElementById("search-input").value.toLowerCase();
+  let rows = currentSector === "todos" ? data : data.filter(d => d.setor === currentSector);
+  if (q) rows = rows.filter(d =>
+    Object.values(d).some(v => String(v).toLowerCase().includes(q))
+  );
+
+  const tbody = document.getElementById("table-body");
+  const empty = document.getElementById("empty-state");
+
+  if (!rows.length) {
+    tbody.innerHTML = "";
+    empty.style.display = "block";
+    return;
+  }
+  empty.style.display = "none";
+
+  tbody.innerHTML = rows.map(d => {
+    const cfg = SETORES_CONFIG[d.setor] || { cor: "#555", cl: "#222", tag: "#aaa" };
+    const isEditing = editingId === d.id;
+    return `
+    <tr class="${isEditing ? 'editing' : ''}" data-id="${d.id}">
+      <td>
+        <span style="display:inline-flex;align-items:center;gap:6px">
+          <span style="width:7px;height:7px;border-radius:50%;background:${cfg.cor};display:inline-block"></span>
+          <span style="font-size:12px;font-weight:600;color:${cfg.tag}">${d.setor}</span>
+        </span>
+      </td>
+      <td><input class="editable" value="${esc(d.usuario)}" data-field="usuario" data-id="${d.id}" onchange="fieldChange(this)"></td>
+      <td><input class="editable" value="${esc(d.nb)}" data-field="nb" data-id="${d.id}" onchange="fieldChange(this)" style="font-family:'DM Mono',monospace;font-size:12px"></td>
+      <td><input class="editable" value="${esc(d.marca)}" data-field="marca" data-id="${d.id}" onchange="fieldChange(this)"></td>
+      <td><input class="editable" value="${esc(d.cpu)}" data-field="cpu" data-id="${d.id}" onchange="fieldChange(this)"></td>
+      <td><input class="editable" value="${esc(d.ram)}" data-field="ram" data-id="${d.id}" onchange="fieldChange(this)"></td>
+      <td><input class="editable" value="${esc(d.hd)}" data-field="hd" data-id="${d.id}" onchange="fieldChange(this)"></td>
+      <td><input class="editable" value="${esc(d.serie)}" data-field="serie" data-id="${d.id}" onchange="fieldChange(this)" style="font-family:'DM Mono',monospace;font-size:12px"></td>
+      <td><input class="editable" value="${esc(d.patri)}" data-field="patri" data-id="${d.id}" onchange="fieldChange(this)" style="font-family:'DM Mono',monospace;font-size:12px"></td>
+      <td>
+        <button class="status-pill status-${d.status.replace('ã','a').replace('ç','c')}" onclick="cycleStatus('${d.id}')">
+          ${d.status === 'Ativo' ? '●' : d.status === 'Inativo' ? '○' : '⚙'} ${d.status}
+        </button>
+      </td>
+      <td><input class="editable" value="${esc(d.obs)}" data-field="obs" data-id="${d.id}" onchange="fieldChange(this)"></td>
+      <td>
+        <div class="actions-cell">
+          ${isEditing
+            ? `<button class="btn btn-success btn-sm" onclick="saveEdit('${d.id}')">✓ Salvar</button>
+               <button class="btn btn-ghost btn-sm" onclick="cancelEdit()">✕</button>`
+            : `<button class="btn btn-ghost btn-sm" onclick="startEdit('${d.id}')">✎ Editar</button>
+               <button class="btn btn-danger btn-sm" onclick="deleteRow('${d.id}')">🗑</button>`
+          }
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+function esc(v) {
+  return String(v || "").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+// ── EDIT ──
+function startEdit(id) { editingId = id; renderTable(); }
+function cancelEdit() { editingId = null; renderTable(); }
+
+function fieldChange(input) {
+  const id = input.dataset.id;
+  const field = input.dataset.field;
+  const item = data.find(d => d.id === id);
+  if (item) item[field] = input.value;
+}
+
+function saveEdit(id) {
+  editingId = null;
+  save(); buildSidebar(); renderTable();
+  toast("✓ Alterações salvas!");
+}
+
+function cycleStatus(id) {
+  const item = data.find(d => d.id === id);
+  if (!item) return;
+  const i = STATUS_CYCLE.indexOf(item.status);
+  item.status = STATUS_CYCLE[(i + 1) % STATUS_CYCLE.length];
+  save(); buildSidebar(); renderTable();
+}
+
+function deleteRow(id) {
+  if (!confirm("Remover este notebook do inventário?")) return;
+  data = data.filter(d => d.id !== id);
+  save(); buildSidebar(); renderTable();
+  toast("🗑 Notebook removido.");
+}
+
+// ── ADD ──
+function toggleAddForm() {
+  const f = document.getElementById("add-form");
+  f.classList.toggle("open");
+}
+
+function addNotebook() {
+  const setor = document.getElementById("f-setor").value;
+  const usuario = document.getElementById("f-usuario").value.trim();
+  if (!setor) { toast("⚠ Selecione um setor!"); return; }
+  if (!usuario) { toast("⚠ Informe o nome do usuário!"); return; }
+
+  data.push({
+    id: Date.now().toString(),
+    setor,
+    usuario,
+    nb:     document.getElementById("f-nb").value,
+    marca:  document.getElementById("f-marca").value,
+    cpu:    document.getElementById("f-cpu").value,
+    ram:    document.getElementById("f-ram").value,
+    hd:     document.getElementById("f-hd").value,
+    serie:  document.getElementById("f-serie").value,
+    patri:  document.getElementById("f-patri").value,
+    status: document.getElementById("f-status").value,
+    obs:    document.getElementById("f-obs").value,
+  });
+
+  // clear
+  ["f-setor","f-usuario","f-nb","f-marca","f-cpu","f-ram","f-hd","f-serie","f-patri","f-obs"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  document.getElementById("f-status").value = "Ativo";
+
+  document.getElementById("add-form").classList.remove("open");
+  save(); buildSidebar(); renderTable();
+  toast("✓ Notebook adicionado!");
+}
+
+// ── EXPORT ──
+function exportCSV() {
+  const rows = [["Setor","Usuário","Computador","Marca/Modelo","Processador","RAM","Armazenamento","Nº Série","Patrimônio","Status","Observações"]];
+  data.forEach(d => rows.push([d.setor,d.usuario,d.nb,d.marca,d.cpu,d.ram,d.hd,d.serie,d.patri,d.status,d.obs]));
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(";")).join("\n");
+  const a = document.createElement("a");
+  a.href = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csv);
+  a.download = "inventario_notebooks.csv";
+  a.click();
+  toast("⬇ CSV exportado!");
+}
+
+// ── TOAST ──
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+// ── INIT ──
+load();
+buildSidebar();
+renderTable();
+</script>
+</body>
+</html>

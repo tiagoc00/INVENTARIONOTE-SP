@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2336;
+    --border: #2a2f45;
+    --text: #e8eaf2;
+    --text-dim: #7a80a0;
+    --text-muted: #4a5070;
+    --accent: #4f8ef7;
+
+    --ti:       #2471A3; --ti-cl: #1a3a5c; --ti-tag: #4a9fd4;
+    --rh:       #1E8449; --rh-cl: #0f3d22; --rh-tag: #2ecc71;
+    --fin:      #B7950B; --fin-cl: #4a3a04; --fin-tag: #f0c030;
+    --dir:      #922B21; --dir-cl: #3d1008; --dir-tag: #e74c3c;
+    --com:      #6C3483; --com-cl: #2d1238; --com-tag: #9b59b6;
+    --ope:      #1A5276; --ope-cl: #0a2030; --ope-tag: #3498db;
+    --aud:      #7D6608; --aud-cl: #352a02; --aud-tag: #d4ac0d;
+    --dp:       #154360; --dp-cl: #091c2b; --dp-tag: #2980b9;
+    --mkt:      #784212; --mkt-cl: #321608; --mkt-tag: #e67e22;
+  }
+
+  body {
+    @apply font-sans bg-bg text-text min-h-screen antialiased;
+    font-family: 'DM Sans', sans-serif;
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
