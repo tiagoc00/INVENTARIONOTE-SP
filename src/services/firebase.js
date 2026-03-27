@@ -1,10 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { 
-  getFirestore,
-  initializeFirestore, 
-  persistentLocalCache, 
-  persistentMultipleTabManager 
-} from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,17 +12,10 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 
-// Tenta inicializar com cache local para performance,
-// se falhar (ex: navegador sem suporte a IndexedDB), usa o modo padrão
-let firestoreDb;
-try {
-  firestoreDb = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-  });
-  console.log("Firestore inicializado com cache persistente.");
-} catch (error) {
-  console.warn("Cache persistente indisponível, usando modo padrão:", error.message);
-  firestoreDb = getFirestore(app);
-}
+// Usa Long Polling (HTTP) ao invés de WebSocket para compatibilidade
+// com redes corporativas e firewalls que bloqueiam WebSocket
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+  useFetchStreams: false,
+});
 
-export const db = firestoreDb;
