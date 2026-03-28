@@ -32,15 +32,35 @@ export function InventoryProvider({ children }) {
   const [data, setData] = useState([]);
   const [currentSector, setCurrentSector] = useState("todos");
   const [searchQuery, setSearchQuery] = useState("");
-  const [lastSaved, setLastSaved] = useState("Conectado ao Firebase Cloud");
+  const [lastSaved, setLastSaved] = useState("Conectando ao Firebase...");
   const [isLoading, setIsLoading] = useState(true);
+  const [connectionError, setConnectionError] = useState(null);
 
   // Real-time synchronization with Firestore
   useEffect(() => {
     setIsLoading(true);
+    setConnectionError(null);
+    let unsubscribe = null;
+    let timeoutId = null;
+
+    // Timeout de 15s para não ficar travado em "Conectando..."
+    timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.warn("Timeout de conexão ao Firestore (15s)");
+        setIsLoading(false);
+        setConnectionError("timeout");
+        setLastSaved("⚠ Conexão lenta — dados podem não estar atualizados");
+      }
+    }, 15000);
 
     const startListener = (q, isRetry = false) => {
       return onSnapshot(q, (snapshot) => {
+        // Conexão bem-sucedida — limpar timeout
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+
         const items = snapshot.docs.map(d => ({
           ...d.data(),
           id: d.id
@@ -51,33 +71,44 @@ export function InventoryProvider({ children }) {
         }
         setData(items);
         setIsLoading(false);
+        setConnectionError(null);
         setLastSaved(`Atualizado: ${new Date().toLocaleTimeString('pt-BR')}`);
       }, (error) => {
         console.error("Erro no Firestore:", error.code, error.message);
 
+        // Limpar timeout em caso de erro
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+
         // Se a consulta ordenada falhar, tenta sem o orderBy
         if (!isRetry) {
           console.warn("Tentando consulta sem orderBy...");
-          startListener(collection(db, "notebooks"), true);
+          unsubscribe = startListener(collection(db, "notebooks"), true);
           return;
         }
 
         // Se ambas falharam, mostra mensagem de acordo com o erro
         setIsLoading(false);
         if (error.code === 'permission-denied') {
+          setConnectionError("permission");
           setLastSaved("⚠ Sem permissão — verifique as regras do Firestore");
         } else if (error.code === 'unavailable') {
+          setConnectionError("offline");
           setLastSaved("⚠ Sem conexão com a internet");
         } else {
+          setConnectionError("error");
           setLastSaved(`Erro: ${error.code || error.message}`);
         }
       });
     };
 
     const orderedQuery = query(collection(db, "notebooks"), orderBy("createdAt", "desc"));
-    const unsubscribe = startListener(orderedQuery);
+    unsubscribe = startListener(orderedQuery);
 
     return () => {
+      if (timeoutId) clearTimeout(timeoutId);
       if (typeof unsubscribe === 'function') unsubscribe();
     };
   }, []);
@@ -120,7 +151,7 @@ export function InventoryProvider({ children }) {
       });
     } catch (error) {
       console.error("Erro ao adicionar:", error);
-      alert("Erro ao salvar no banco de dados.");
+      throw error; // Re-throw para que o chamador possa tratar
     }
   };
 
@@ -130,6 +161,16 @@ export function InventoryProvider({ children }) {
       await updateDoc(docRef, { [field]: value });
     } catch (error) {
       console.error("Erro ao atualizar:", error);
+    }
+  };
+
+  const bulkUpdateNotebook = async (id, fields) => {
+    try {
+      const docRef = doc(db, "notebooks", id);
+      await updateDoc(docRef, fields);
+    } catch (error) {
+      console.error("Erro ao atualizar em lote:", error);
+      alert("Erro ao atualizar o notebook.");
     }
   };
 
@@ -200,7 +241,7 @@ export function InventoryProvider({ children }) {
   return (
     <InventoryContext.Provider value={{
       data, currentSector, setCurrentSector, searchQuery, setSearchQuery,
-      lastSaved, isLoading, addNotebook, updateNotebook, cycleStatus, deleteNotebook,
+      lastSaved, isLoading, addNotebook, updateNotebook, bulkUpdateNotebook, cycleStatus, deleteNotebook,
       addMultipleNotebooks, getFilteredData, getSummary, exportCSV, SETORES_CONFIG
     }}>
       {children}

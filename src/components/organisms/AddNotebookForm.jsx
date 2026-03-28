@@ -10,6 +10,7 @@ export function AddNotebookForm({ isOpen, onClose }) {
     setor: '', usuario: '', nb: '', marca: '', cpu: '', ram: '', hd: '', serie: '', patri: '', status: 'Ativo', obs: ''
   };
   const [form, setForm] = useState(initialForm);
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!isOpen) return null;
 
@@ -17,13 +18,21 @@ export function AddNotebookForm({ isOpen, onClose }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.setor) return alert('⚠ Selecione um setor!');
     if (!form.usuario) return alert('⚠ Informe o nome do usuário!');
     
-    addNotebook(form);
-    setForm(initialForm);
-    onClose();
+    setIsSaving(true);
+    try {
+      await addNotebook(form);
+      setForm(initialForm);
+      onClose();
+    } catch (error) {
+      console.error("Erro ao salvar notebook:", error);
+      alert('❌ Erro ao salvar no banco de dados. Tente novamente.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -58,8 +67,10 @@ export function AddNotebookForm({ isOpen, onClose }) {
       </div>
 
       <div className="flex gap-2.5">
-        <Button variant="success" onClick={handleSave}>✓ Salvar</Button>
-        <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+        <Button variant="success" onClick={handleSave} disabled={isSaving}>
+          {isSaving ? '⏳ Salvando...' : '✓ Salvar'}
+        </Button>
+        <Button variant="ghost" onClick={onClose} disabled={isSaving}>Cancelar</Button>
       </div>
     </div>
   );

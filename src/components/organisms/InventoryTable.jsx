@@ -5,10 +5,11 @@ import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 
 export function InventoryTable() {
-  const { getFilteredData, SETORES_CONFIG, cycleStatus, deleteNotebook, updateNotebook, isLoading } = useInventory();
+  const { getFilteredData, SETORES_CONFIG, cycleStatus, deleteNotebook, bulkUpdateNotebook, isLoading } = useInventory();
   const data = getFilteredData();
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   if (isLoading) {
     return (
@@ -37,11 +38,17 @@ export function InventoryTable() {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
   };
 
-  const saveEdit = () => {
-    Object.keys(editForm).forEach(key => {
-      updateNotebook(editingId, key, editForm[key]);
-    });
-    setEditingId(null);
+  const saveEdit = async () => {
+    setIsSavingEdit(true);
+    try {
+      const { id, ...fields } = editForm;
+      await bulkUpdateNotebook(editingId, fields);
+      setEditingId(null);
+    } catch (error) {
+      console.error("Erro ao salvar edição:", error);
+    } finally {
+      setIsSavingEdit(false);
+    }
   };
 
   const cancelEdit = () => setEditingId(null);

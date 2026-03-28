@@ -12,10 +12,8 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 
-// Usa Long Polling (HTTP) ao invés de WebSocket para compatibilidade
-// com redes corporativas e firewalls que bloqueiam WebSocket
-export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-  useFetchStreams: false,
-});
-
+// Inicializa Firestore SEM long polling forçado.
+// Long polling era a causa principal da lentidão na conexão.
+// O Firestore usa WebChannel por padrão, que é eficiente e rápido.
+// Só ative experimentalForceLongPolling se WebSocket estiver bloqueado na rede.
+export const db = initializeFirestore(app, {});
