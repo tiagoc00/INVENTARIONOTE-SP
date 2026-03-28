@@ -3,14 +3,32 @@ import { SectorButton } from '../molecules/SectorButton';
 import { SummaryRow } from '../molecules/SummaryRow';
 
 export function Sidebar() {
-  const { data, currentSector, setCurrentSector, getSummary, SETORES_CONFIG } = useInventory();
+  const { data, currentSector, setCurrentSector, activeView, setActiveView, getSummary, SETORES_CONFIG } = useInventory();
   const summary = getSummary();
 
   const handleSectorClick = (sector) => setCurrentSector(sector);
 
   return (
     <aside className="w-[220px] min-w-[220px] bg-surface border-r border-border flex flex-col overflow-y-auto">
-      <div className="p-4 pb-2">
+      <div className="p-4 pb-0">
+        <div className="text-[10px] font-semibold text-text-muted tracking-[1px] uppercase px-2 pb-2">
+          Visualização
+        </div>
+        <button 
+          onClick={() => setActiveView('inventory')}
+          className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium mb-1 flex items-center gap-2 transition-colors ${activeView === 'inventory' ? 'bg-surface2 text-text' : 'text-text-dim hover:bg-surface2/50 hover:text-text'}`}
+        >
+          📋 Inventário
+        </button>
+        <button 
+          onClick={() => setActiveView('analytics')}
+          className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${activeView === 'analytics' ? 'bg-surface2 text-text' : 'text-text-dim hover:bg-surface2/50 hover:text-text'}`}
+        >
+          📊 Visão Geral
+        </button>
+      </div>
+
+      <div className="p-4 pb-2 mt-2">
         <div className="text-[10px] font-semibold text-text-muted tracking-[1px] uppercase px-2 pb-2">
           Setores
         </div>

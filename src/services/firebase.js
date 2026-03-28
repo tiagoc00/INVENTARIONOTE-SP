@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { initializeFirestore } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -12,8 +12,12 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 
-// Inicializa Firestore SEM long polling forçado.
-// Long polling era a causa principal da lentidão na conexão.
-// O Firestore usa WebChannel por padrão, que é eficiente e rápido.
-// Só ative experimentalForceLongPolling se WebSocket estiver bloqueado na rede.
-export const db = initializeFirestore(app, {});
+// Em redes corporativas, WebSockets frequentemente sofrem timeout no firewall.
+// Reativamos o Long Polling, mas agora adicionamos o cache local offline.
+// Assim, o aplicativo carrega IMEDIATAMENTE os dados da memória local,
+// enquanto resolve a lentidão da conexão silenciosamente em segundo plano,
+// sem travar a interface do usuário.
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+  localCache: persistentLocalCache()
+});

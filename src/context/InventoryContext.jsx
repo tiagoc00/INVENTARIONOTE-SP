@@ -31,6 +31,7 @@ const STATUS_CYCLE = ["Ativo", "Inativo", "Manutenção"];
 export function InventoryProvider({ children }) {
   const [data, setData] = useState([]);
   const [currentSector, setCurrentSector] = useState("todos");
+  const [activeView, setActiveView] = useState("inventory");
   const [searchQuery, setSearchQuery] = useState("");
   const [lastSaved, setLastSaved] = useState("Conectando ao Firebase...");
   const [isLoading, setIsLoading] = useState(true);
@@ -240,7 +241,7 @@ export function InventoryProvider({ children }) {
 
   return (
     <InventoryContext.Provider value={{
-      data, currentSector, setCurrentSector, searchQuery, setSearchQuery,
+      data, currentSector, setCurrentSector, activeView, setActiveView, searchQuery, setSearchQuery,
       lastSaved, isLoading, addNotebook, updateNotebook, bulkUpdateNotebook, cycleStatus, deleteNotebook,
       addMultipleNotebooks, getFilteredData, getSummary, exportCSV, SETORES_CONFIG
     }}>

@@ -3,6 +3,7 @@ import { DashboardLayout } from '../components/templates/DashboardLayout';
 import { Header } from '../components/organisms/Header';
 import { Sidebar } from '../components/organisms/Sidebar';
 import { InventoryTable } from '../components/organisms/InventoryTable';
+import { AnalyticsDashboard } from '../components/organisms/AnalyticsDashboard';
 import { AddNotebookForm } from '../components/organisms/AddNotebookForm';
 import { SearchBox } from '../components/molecules/SearchBox';
 import { useInventory } from '../context/InventoryContext';
@@ -10,7 +11,7 @@ import { Badge } from '../components/atoms/Badge';
 
 export function DashboardPage() {
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
-  const { currentSector, searchQuery, setSearchQuery, SETORES_CONFIG, getFilteredData } = useInventory();
+  const { currentSector, searchQuery, setSearchQuery, activeView, SETORES_CONFIG, getFilteredData } = useInventory();
   
   const sectorConfig = currentSector !== 'todos' ? SETORES_CONFIG[currentSector] : null;
   const filteredCount = getFilteredData().length;
@@ -42,7 +43,7 @@ export function DashboardPage() {
         </div>
         
         <div className={`flex flex-col flex-1 transition-all ${isAddFormOpen ? 'mt-[380px]' : ''}`}>
-           <InventoryTable />
+           {activeView === 'inventory' ? <InventoryTable /> : <AnalyticsDashboard />}
         </div>
       </div>
     </DashboardLayout>
